@@ -84,7 +84,9 @@ class HomeScreen extends StatelessWidget {
 
             /// TOTAL EXPENSE CARD
             SummaryCard(
-              total: provider.totalExpense,
+              totalIncome: provider.totalIncome,
+              totalExpenses: provider.totalExpenses,
+              balance: provider.balance,
             ),
 
             const SizedBox(height: 20),
@@ -132,7 +134,7 @@ class HomeScreen extends StatelessWidget {
 
                   ? const Center(
                 child: Text(
-                  "No Expenses Added",
+                  "No transactions yet",
                 ),
               )
 

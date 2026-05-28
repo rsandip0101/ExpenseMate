@@ -1,9 +1,9 @@
-
 import 'package:hive/hive.dart';
+
 part 'expense_model.g.dart';
 
 @HiveType(typeId: 0)
-class ExpenseModel extends HiveObject{
+class ExpenseModel extends HiveObject {
 
   @HiveField(0)
   String title;
@@ -17,14 +17,14 @@ class ExpenseModel extends HiveObject{
   @HiveField(3)
   String date;
 
-ExpenseModel({
-  required this.title,
-  required this.amount,
-  required this.category,
-  required this.date,
-});
+  @HiveField(4)
+  String type;
 
+  ExpenseModel({
+    required this.title,
+    required this.amount,
+    required this.category,
+    required this.date,
+    required this.type,
+  });
 }
-
-//dart run build_runner watch --delete-conflicting-outputs
-//dart run build_runner build

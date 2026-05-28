@@ -1,10 +1,10 @@
-
+import 'package:expensemate/model/expense_model.dart';
+import 'package:expensemate/utils/constants.dart';
+import 'package:expensemate/view/widgets/custom_button.dart';
+import 'package:expensemate/viewmodel/expense_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../model/expense_model.dart';
-import '../../viewmodel/expense_viewmodel.dart';
-import '../widgets/custom_button.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -22,18 +22,16 @@ class _AddExpenseScreenState
 
   final _formKey = GlobalKey<FormState>();
 
-  String selectedCategory = "Food";
+  String selectedCategory = AppConstants.expenseCategories.first;
+
+  String selectedType = AppConstants.typeExpense;
 
   String selectedDate =
   DateFormat('yyyy-MM-dd')
       .format(DateTime.now());
 
-  List<String> categories = [
-    "Food",
-    "Travel",
-    "Shopping",
-    "Bills",
-  ];
+  bool get isIncome =>
+      selectedType == AppConstants.typeIncome;
 
   Future<void> pickDate() async {
 
@@ -65,7 +63,7 @@ class _AddExpenseScreenState
     return Scaffold(
 
       appBar: AppBar(
-        title: const Text("Add Expense"),
+        title: const Text("Add Transaction"),
       ),
 
       body: Padding(
@@ -78,18 +76,57 @@ class _AddExpenseScreenState
           child: Column(
             children: [
 
+              DropdownButtonFormField(
+
+                value: selectedType,
+
+                decoration: const InputDecoration(
+                  labelText: "Type",
+                  border: OutlineInputBorder(),
+                ),
+
+                items: [
+                  AppConstants.typeExpense,
+                  AppConstants.typeIncome,
+                ].map((type) {
+
+                  return DropdownMenuItem(
+                    value: type,
+                    child: Text(type),
+                  );
+
+                }).toList(),
+
+                onChanged: (value) {
+
+                  setState(() {
+                    selectedType = value!;
+                    if (!isIncome) {
+                      selectedCategory =
+                          AppConstants.expenseCategories.first;
+                    }
+                  });
+                },
+              ),
+
+              const SizedBox(height: 20),
+
               TextFormField(
                 controller: titleController,
 
-                decoration: const InputDecoration(
-                  hintText: "Expense Title",
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: isIncome
+                      ? "Income source (e.g. Salary)"
+                      : "Title",
+                  border: const OutlineInputBorder(),
                 ),
 
                 validator: (value) {
 
                   if (value == null || value.isEmpty) {
-                    return "Please enter title";
+                    return isIncome
+                        ? "Please enter income source"
+                        : "Please enter title";
                   }
 
                   return null;
@@ -118,28 +155,36 @@ class _AddExpenseScreenState
                 },
               ),
 
-              const SizedBox(height: 20),
+              if (!isIncome) ...[
 
-              DropdownButtonFormField(
+                const SizedBox(height: 20),
 
-                value: selectedCategory,
+                DropdownButtonFormField(
 
-                items: categories.map((category) {
+                  value: selectedCategory,
 
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category),
-                  );
+                  decoration: const InputDecoration(
+                    labelText: "Category",
+                    border: OutlineInputBorder(),
+                  ),
 
-                }).toList(),
+                  items: AppConstants.expenseCategories.map((category) {
 
-                onChanged: (value) {
+                    return DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    );
 
-                  setState(() {
-                    selectedCategory = value!;
-                  });
-                },
-              ),
+                  }).toList(),
+
+                  onChanged: (value) {
+
+                    setState(() {
+                      selectedCategory = value!;
+                    });
+                  },
+                ),
+              ],
 
               const SizedBox(height: 20),
 
@@ -158,7 +203,7 @@ class _AddExpenseScreenState
 
               CustomButton(
 
-                text: "Save Expense",
+                text: "Save Transaction",
 
                 onPressed: () async {
 
@@ -168,11 +213,18 @@ class _AddExpenseScreenState
 
                       title: titleController.text,
 
-                      amount: double.tryParse(amountController.text) ?? 0,
+                      amount:
+                      double.tryParse(
+                        amountController.text,
+                      ) ?? 0,
 
-                      category: selectedCategory,
+                      category: isIncome
+                          ? ""
+                          : selectedCategory,
 
                       date: selectedDate,
+
+                      type: selectedType,
                     );
 
                     await Provider.of<ExpenseViewModel>(

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../model/expense_model.dart';
 import '../services/hive_service.dart';
+import '../utils/constants.dart';
 
 class ExpenseViewModel extends ChangeNotifier {
 
@@ -15,9 +16,18 @@ class ExpenseViewModel extends ChangeNotifier {
 
   String selectedMonth = "All";
 
+  static const _metaBoxName = 'app_meta';
+  static const _incomeMigrationKey = 'income_v1_cleared';
+
   Future<void> init() async {
 
     _box = await _hiveService.openBox();
+
+    final meta = await Hive.openBox(_metaBoxName);
+    if (meta.get(_incomeMigrationKey) != true) {
+      await _box.clear();
+      await meta.put(_incomeMigrationKey, true);
+    }
 
     getExpenses();
   }
@@ -83,15 +93,33 @@ class ExpenseViewModel extends ChangeNotifier {
     getExpenses();
   }
 
-  double get totalExpense {
+  double get totalIncome {
 
     double total = 0;
 
     for (var expense in filteredExpenses) {
 
-      total += expense.amount;
+      if (expense.type == AppConstants.typeIncome) {
+        total += expense.amount;
+      }
     }
 
     return total;
   }
+
+  double get totalExpenses {
+
+    double total = 0;
+
+    for (var expense in filteredExpenses) {
+
+      if (expense.type == AppConstants.typeExpense) {
+        total += expense.amount;
+      }
+    }
+
+    return total;
+  }
+
+  double get balance => totalIncome - totalExpenses;
 }

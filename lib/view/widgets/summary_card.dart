@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 
 class SummaryCard extends StatelessWidget {
 
-  final double total;
+  final double totalIncome;
+  final double totalExpenses;
+  final double balance;
 
   const SummaryCard({
     super.key,
-    required this.total,
+    required this.totalIncome,
+    required this.totalExpenses,
+    required this.balance,
   });
 
   @override
@@ -26,27 +30,74 @@ class SummaryCard extends StatelessWidget {
 
         children: [
 
+          _summaryRow(
+            label: "Income",
+            amount: totalIncome,
+            color: Colors.greenAccent,
+          ),
+
+          const SizedBox(height: 12),
+
+          _summaryRow(
+            label: "Expenses",
+            amount: totalExpenses,
+            color: Colors.redAccent,
+          ),
+
+          const Divider(color: Colors.white24, height: 24),
+
           const Text(
-            "Total Expense",
+            "Balance",
             style: TextStyle(
               color: Colors.white70,
-              fontSize: 18,
+              fontSize: 16,
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
 
           Text(
-            "₹ ${total.toStringAsFixed(2)}",
+            "₹ ${balance.toStringAsFixed(2)}",
 
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 30,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _summaryRow({
+    required String label,
+    required double amount,
+    required Color color,
+  }) {
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+      children: [
+
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 16,
+          ),
+        ),
+
+        Text(
+          "₹ ${amount.toStringAsFixed(2)}",
+          style: TextStyle(
+            color: color,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

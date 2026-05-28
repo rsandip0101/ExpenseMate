@@ -1,8 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
 import '../../model/expense_model.dart';
+import '../../utils/constants.dart';
 import '../../viewmodel/expense_viewmodel.dart';
 import '../widgets/custom_button.dart';
 
@@ -29,38 +30,44 @@ class _EditExpenseScreenState
   late TextEditingController amountController;
 
   late String selectedCategory;
+  late String selectedType;
 
   late String selectedDate;
 
   final _formKey = GlobalKey<FormState>();
 
-  List<String> categories = [
-    "Food",
-    "Travel",
-    "Shopping",
-    "Bills",
-  ];
+  bool get isIncome =>
+      selectedType == AppConstants.typeIncome;
 
   @override
   void initState() {
     super.initState();
 
     titleController =
-        TextEditingController(text: widget.expense.title);
+        TextEditingController(
+          text: widget.expense.title,
+        );
 
     amountController =
         TextEditingController(
           text: widget.expense.amount.toString(),
         );
 
-    selectedCategory = widget.expense.category;
+    selectedCategory = widget.expense.category.isNotEmpty
+        ? widget.expense.category
+        : AppConstants.expenseCategories.first;
 
-    selectedDate = widget.expense.date;
+    selectedType =
+        widget.expense.type;
+
+    selectedDate =
+        widget.expense.date;
   }
 
   Future<void> pickDate() async {
 
-    DateTime? pickedDate = await showDatePicker(
+    DateTime? pickedDate =
+    await showDatePicker(
 
       context: context,
 
@@ -88,7 +95,9 @@ class _EditExpenseScreenState
     return Scaffold(
 
       appBar: AppBar(
-        title: const Text("Edit Expense"),
+        title: const Text(
+          "Edit Transaction",
+        ),
       ),
 
       body: Padding(
@@ -101,57 +110,25 @@ class _EditExpenseScreenState
           child: Column(
             children: [
 
-              TextFormField(
-                controller: titleController,
-
-                decoration: const InputDecoration(
-                  hintText: "Expense Title",
-                  border: OutlineInputBorder(),
-                ),
-
-                validator: (value) {
-
-                  if (value == null || value.isEmpty) {
-                    return "Please enter title";
-                  }
-
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 20),
-
-              TextFormField(
-                controller: amountController,
-
-                keyboardType: TextInputType.number,
-
-                decoration: const InputDecoration(
-                  hintText: "Amount",
-                  border: OutlineInputBorder(),
-                ),
-
-                validator: (value) {
-
-                  if (value == null || value.isEmpty) {
-                    return "Please enter amount";
-                  }
-
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 20),
-
               DropdownButtonFormField(
 
-                initialValue: selectedCategory,
+                value: selectedType,
 
-                items: categories.map((category) {
+                decoration: const InputDecoration(
+                  labelText: "Type",
+                  border: OutlineInputBorder(),
+                ),
+
+                items: [
+                  AppConstants.typeExpense,
+                  AppConstants.typeIncome,
+                ].map((type) {
 
                   return DropdownMenuItem(
-                    value: category,
-                    child: Text(category),
+
+                    value: type,
+
+                    child: Text(type),
                   );
 
                 }).toList(),
@@ -159,20 +136,124 @@ class _EditExpenseScreenState
                 onChanged: (value) {
 
                   setState(() {
-                    selectedCategory = value!;
+
+                    selectedType = value!;
+                    if (!isIncome) {
+                      selectedCategory =
+                          AppConstants.expenseCategories.first;
+                    }
                   });
                 },
               ),
 
               const SizedBox(height: 20),
 
+              TextFormField(
+
+                controller: titleController,
+
+                decoration: InputDecoration(
+                  hintText: isIncome
+                      ? "Income source (e.g. Salary)"
+                      : "Title",
+                  border: const OutlineInputBorder(),
+                ),
+
+                validator: (value) {
+
+                  if (value == null ||
+                      value.isEmpty) {
+
+                    return isIncome
+                        ? "Please enter income source"
+                        : "Please enter title";
+                  }
+
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              TextFormField(
+
+                controller:
+                amountController,
+
+                keyboardType:
+                TextInputType.number,
+
+                decoration:
+                const InputDecoration(
+                  hintText: "Amount",
+                  border:
+                  OutlineInputBorder(),
+                ),
+
+                validator: (value) {
+
+                  if (value == null ||
+                      value.isEmpty) {
+
+                    return
+                      "Please enter amount";
+                  }
+
+                  return null;
+                },
+              ),
+
+              if (!isIncome) ...[
+
+                const SizedBox(height: 20),
+
+                DropdownButtonFormField(
+
+                  value: AppConstants.expenseCategories
+                      .contains(selectedCategory)
+                      ? selectedCategory
+                      : AppConstants.expenseCategories.first,
+
+                  decoration: const InputDecoration(
+                    labelText: "Category",
+                    border: OutlineInputBorder(),
+                  ),
+
+                  items:
+                  AppConstants.expenseCategories.map((category) {
+
+                    return DropdownMenuItem(
+
+                      value: category,
+
+                      child: Text(category),
+                    );
+
+                  }).toList(),
+
+                  onChanged: (value) {
+
+                    setState(() {
+
+                      selectedCategory =
+                      value!;
+                    });
+                  },
+                ),
+              ],
+
+              const SizedBox(height: 20),
+
               ListTile(
 
-                tileColor: Colors.grey.shade200,
+                tileColor:
+                Colors.grey.shade200,
 
                 title: Text(selectedDate),
 
-                trailing: const Icon(Icons.calendar_month),
+                trailing: const Icon(
+                  Icons.calendar_month,
+                ),
 
                 onTap: pickDate,
               ),
@@ -181,28 +262,44 @@ class _EditExpenseScreenState
 
               CustomButton(
 
-                text: "Update Expense",
+                text: "Update Transaction",
 
                 onPressed: () async {
 
-                  if (_formKey.currentState!.validate()) {
+                  if (_formKey
+                      .currentState!
+                      .validate()) {
 
-                    final updatedExpense = ExpenseModel(
+                    final updatedExpense =
+                    ExpenseModel(
 
-                      title: titleController.text,
+                      title:
+                      titleController.text,
 
-                      amount: double.tryParse(amountController.text) ?? 0,
+                      amount:
+                      double.tryParse(
+                        amountController
+                            .text,
+                      ) ??
+                          0,
 
-                      category: selectedCategory,
+                      category: isIncome
+                          ? ""
+                          : selectedCategory,
 
                       date: selectedDate,
+
+                      type: selectedType,
                     );
 
-                    await Provider.of<ExpenseViewModel>(
+                    await Provider.of<
+                        ExpenseViewModel>(
                       context,
                       listen: false,
                     ).updateExpense(
+
                       widget.index,
+
                       updatedExpense,
                     );
 
